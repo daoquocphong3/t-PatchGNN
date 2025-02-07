@@ -267,15 +267,35 @@ class tPatchGNN(nn.Module):
         mask_X (B*N*M, L, 1)
         """
 
+		print("X.shape:", X.shape)
+		print('B, M, L_in, N: ',B, M, L_in, N)
 		B, M, L_in, N = X.shape
 		self.batch_size = B
 		X = X.permute(0, 3, 1, 2).reshape(-1, L_in, 1) # (B*N*M, L, 1)
+		print("X.shape:", X.shape)
+  
+		print("truth_time_steps shape:", truth_time_steps.shape)
+		print("truth_time_steps original:", truth_time_steps)
 		truth_time_steps = truth_time_steps.permute(0, 3, 1, 2).reshape(-1, L_in, 1)  # (B*N*M, L, 1)
+		print("truth_time_steps shape:", truth_time_steps.shape)
+		print("truth_time_steps:", truth_time_steps)
+        
+        
+		print("mask shape:", mask.shape)
+		print("mask original:", mask)
 		mask = mask.permute(0, 3, 1, 2).reshape(-1, L_in, 1)  # (B*N*M, L, 1)
+		print("mask shape:", mask.shape)
+		print("mask:", mask)
+  
 		te_his = self.LearnableTE(truth_time_steps) # (B*N*M, L, F_te)
-
+		print("te_his shape:", te_his.shape)
+		print("te_his:", te_his)
+  
 		X = torch.cat([X, te_his], dim=-1)  # (B*N*M, L, F)
-
+		print("after cat LearnableTE:")
+		print("X shape:", X.shape)
+		print("X:", X)
+  
 		### *** a encoder to model irregular time series
 		h = self.IMTS_Model(X, mask) # (B, N, hid_dim)
 
