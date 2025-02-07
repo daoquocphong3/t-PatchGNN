@@ -268,8 +268,8 @@ class tPatchGNN(nn.Module):
         """
 
 		print("X.shape:", X.shape)
-		print('B, M, L_in, N: ',B, M, L_in, N)
 		B, M, L_in, N = X.shape
+		print('B, M, L_in, N: ',B, M, L_in, N)
 		self.batch_size = B
 		X = X.permute(0, 3, 1, 2).reshape(-1, L_in, 1) # (B*N*M, L, 1)
 		print("X.shape:", X.shape)
