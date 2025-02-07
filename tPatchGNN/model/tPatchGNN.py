@@ -298,7 +298,10 @@ class tPatchGNN(nn.Module):
   
 		### *** a encoder to model irregular time series
 		h = self.IMTS_Model(X, mask) # (B, N, hid_dim)
-
+		print("after IMTS_Model:")  
+		print("h shape:", h.shape)
+		print("h:", h)
+    
 		""" Decoder """
 		L_pred = time_steps_to_predict.shape[-1]
 		h = h.unsqueeze(dim=-2).repeat(1, 1, L_pred, 1) # (B, N, Lp, F)
