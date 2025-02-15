@@ -125,11 +125,11 @@ if __name__ == '__main__':
 
 		### Training ###
 		model.train()
-		for _ in range(num_batches):
+		for batch_num in range(num_batches):
 			optimizer.zero_grad()
 			batch_dict = utils.get_next_batch(data_obj["train_dataloader"])
 			print('batch_dict: ', batch_dict.keys()) 
-			train_res = compute_all_losses(model, batch_dict)
+			train_res = compute_all_losses(model, batch_dict, batch_num)
 			train_res["loss"].backward()
 			optimizer.step()
 

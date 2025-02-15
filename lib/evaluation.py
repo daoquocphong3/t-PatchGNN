@@ -304,14 +304,22 @@ def compute_error(truth, pred_y, mask, func, reduce, norm_dict=None):
 		raise Exception("Reduce argument not specified!")
 
 
-def compute_all_losses(model, batch_dict):
+def compute_all_losses(model, batch_dict, batch_num):
 	# Condition on subsampled points
 	# Make predictions for all the points
 	# shape of pred --- [n_traj_samples=1, n_batch, n_tp, n_dim]
 
-	pred_y = model.forecasting(batch_dict["tp_to_predict"], 
+	if batch_num == 0:
+		pred_y = model.forecasting_with_log(batch_dict["tp_to_predict"], 
 		batch_dict["observed_data"], batch_dict["observed_tp"], 
-		batch_dict["observed_mask"]) 
+		batch_dict["observed_mask"])
+	else:
+		pred_y = model.forecasting(batch_dict["tp_to_predict"], 
+		batch_dict["observed_data"], batch_dict["observed_tp"], 
+		batch_dict["observed_mask"])
+	# pred_y = model.forecasting(batch_dict["tp_to_predict"], 
+	# 	batch_dict["observed_data"], batch_dict["observed_tp"], 
+	# 	batch_dict["observed_mask"]) 
 	# print("pred:", pred_y.shape, batch_dict["mask_predicted_data"].shape)
 
 	# Compute avg error of each variable first, then compute avg error of all variables

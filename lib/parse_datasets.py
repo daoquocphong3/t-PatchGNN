@@ -4,6 +4,7 @@ import pandas as pd
 import random
 import torch
 import torch.nn as nn
+import pickle
 
 import lib.utils as utils
 from torch.distributions import uniform
@@ -43,12 +44,17 @@ def parse_datasets(args, patch_ts=False, length_stat=False):
 		print("Test record ids (last 20):", test_record_ids[-20:])
 
 		record_id, tt, vals, mask = train_data[0]
+		with open('test_data/physionet/total_dataset.pkl', 'wb') as f:
+			pickle.dumps(total_dataset, f)  
+		with open('test_data/physionet/train_data.pkl', 'wb') as f:
+			pickle.dumps(train_data, f)
 
 		input_dim = vals.size(-1)
 
 		batch_size = min(min(len(seen_data), args.batch_size), args.n)
 		data_min, data_max, time_max = get_data_min_max(seen_data, device) # (n_dim,), (n_dim,)
 
+		print('patch_ts:', patch_ts)
 		if(patch_ts):
 			collate_fn = patch_variable_time_collate_fn
 		else:

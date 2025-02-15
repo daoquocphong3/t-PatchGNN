@@ -1,4 +1,5 @@
 import math
+import pickle
 import numpy as np
 import torch
 import torch.nn as nn
@@ -267,6 +268,60 @@ class tPatchGNN(nn.Module):
         mask_X (B*N*M, L, 1)
         """
 
+		B, M, L_in, N = X.shape
+		self.batch_size = B
+		X = X.permute(0, 3, 1, 2).reshape(-1, L_in, 1) # (B*N*M, L, 1)
+  
+		truth_time_steps = truth_time_steps.permute(0, 3, 1, 2).reshape(-1, L_in, 1)  # (B*N*M, L, 1)
+        
+        
+		mask = mask.permute(0, 3, 1, 2).reshape(-1, L_in, 1)  # (B*N*M, L, 1)
+  
+		te_his = self.LearnableTE(truth_time_steps) # (B*N*M, L, F_te)
+  
+		X = torch.cat([X, te_his], dim=-1)  # (B*N*M, L, F)
+  
+		### *** a encoder to model irregular time series
+		h = self.IMTS_Model(X, mask) # (B, N, hid_dim)
+    
+		""" Decoder """
+		L_pred = time_steps_to_predict.shape[-1]
+		h = h.unsqueeze(dim=-2).repeat(1, 1, L_pred, 1) # (B, N, Lp, F)
+		time_steps_to_predict = time_steps_to_predict.view(B, 1, L_pred, 1).repeat(1, N, 1, 1) # (B, N, Lp, 1)
+		te_pred = self.LearnableTE(time_steps_to_predict) # (B, N, Lp, F_te)
+
+		h = torch.cat([h, te_pred], dim=-1) # (B, N, Lp, F)
+
+		# (B, N, Lp, F) -> (B, N, Lp, 1) -> (1, B, Lp, N)
+		outputs = self.decoder(h).squeeze(dim=-1).permute(0, 2, 1).unsqueeze(dim=0) 
+
+		return outputs # (1, B, Lp, N)
+
+
+	def forecasting_with_log(self, time_steps_to_predict, X, truth_time_steps, mask = None):
+		
+		""" 
+		time_steps_to_predict (B, L) [0, 1]
+		X (B, M, L, N) 
+		truth_time_steps (B, M, L, N) [0, 1]
+		mask (B, M, L, N)
+
+		To ====>
+
+        X (B*N*M, L, 1)
+		truth_time_steps (B*N*M, L, 1)
+        mask_X (B*N*M, L, 1)
+        """
+
+		with open('test_data/first_batch/time_steps_to_predict.pkl', 'wb') as f:
+			pickle.dumps(time_steps_to_predict, f)  
+		with open('test_data/first_batch/X.pkl', 'wb') as f:
+			pickle.dumps(X, f)  
+		with open('test_data/first_batch/truth_time_steps.pkl', 'wb') as f:
+			pickle.dumps(truth_time_steps, f)  
+		with open('test_data/first_batch/mask.pkl', 'wb') as f:
+			pickle.dumps(mask, f)  
+   
 		print("X.shape:", X.shape)
 		B, M, L_in, N = X.shape
 		print('B, M, L_in, N: ',B, M, L_in, N)
@@ -314,4 +369,3 @@ class tPatchGNN(nn.Module):
 		outputs = self.decoder(h).squeeze(dim=-1).permute(0, 2, 1).unsqueeze(dim=0) 
 
 		return outputs # (1, B, Lp, N)
-
